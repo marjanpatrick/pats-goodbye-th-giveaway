@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Free Items Giveaway</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; max-width: 700px; margin: auto; }
+    h1 { text-align: center; }
+    .item { border: 1px solid #ccc; padding: 15px; margin-bottom: 15px; border-radius: 6px; }
+    .item img { max-width: 100%; height: auto; display: block; margin-bottom: 10px; }
+    .item-title { font-weight: bold; font-size: 1.2em; margin-bottom: 6px; }
+    .item-desc { margin-bottom: 10px; }
+    .claim-btn {
+      background-color: #007bff; color: white; border: none;
+      padding: 8px 12px; border-radius: 4px; cursor: pointer;
+      text-decoration: none;
+      font-size: 1em;
+    }
+    .claim-btn:hover { background-color: #0056b3; }
+  </style>
+</head>
+<body>
+  <h1>Free Items Giveaway</h1>
+  <div id="items-container">Loading items...</div>
+
+  <!-- Tabletop.js to load Google Sheet data -->
+  <script src="https://cdn.jsdelivr.net/npm/tabletop@1.6.0/tabletop.min.js"></script>
+  <script>
+    // Google Sheet key (from your sheet URL)
+    const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1UDuVaOmDT1ZitAdk_t5AUjvodvqzrNSKF-b4OP0XTA4/edit#gid=0';
+
+    // Google Form pre-filled URL template with the item placeholder
+    // Replace entry.149196318 with your field key
+    const FORM_BASE_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSdsUDAkjKd5uhkhOtpjT5oeYLDW41Vw_Qjb0bcJjTQyTT9rAg/viewform?usp=pp_url&entry.149196318=';
+
+    function escapeHtml(text) {
+      var map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      };
+      return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+    }
+
+    function loadItems() {
+      Tabletop.init({
+        key: SHEET_URL,
+        simpleSheet: true,
+        callback: function(data, tabletop) {
+          const container = document.getElementById('items-container');
+          container.innerHTML = '';
+
+          // Filter only unclaimed items
+          const unclaimedItems = data.filter(item => {
+            // If Claimed is missing or not "Yes" (case-insensitive)
+            return !(item.Claimed && item.Claimed.toLowerCase() === 'yes');
+          });
+
+          if (unclaimedItems.length === 0) {
+            container.innerHTML = '<p>All items have been claimed. Thank you!</p>';
+            return;
+          }
+
+          unclaimedItems.forEach(item => {
+            const itemName = item['Item Name'] || 'Unnamed Item';
+            const imageUrl = item['Image URL'] || '';
+            const desc = item['Description'] || '';
+
+            // Build claim URL by URL-encoding item name
+            const claimUrl = FORM_BASE_URL + encodeURIComponent(itemName);
+
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'item';
+
+            let imgHtml = '';
+            if (imageUrl) {
+              imgHtml = `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(itemName)}" />`;
+            }
+
+            itemDiv.innerHTML = `
