@@ -7,14 +7,23 @@
     body {
       font-family: sans-serif;
       padding: 2rem;
-      max-width: 600px;
+      max-width: 800px;
       margin: auto;
+      background: #f8f8f8;
     }
     .item {
+      background: #fff;
       border: 1px solid #ccc;
       padding: 1rem;
-      margin-bottom: 1rem;
+      margin-bottom: 1.5rem;
       border-radius: 6px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    .item img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+      margin-bottom: 1rem;
     }
     .claimed {
       color: red;
@@ -28,10 +37,8 @@
       border-radius: 4px;
       cursor: pointer;
       text-decoration: none;
-    }
-    .claim-button.disabled {
-      background: gray;
-      pointer-events: none;
+      display: inline-block;
+      margin-top: 1rem;
     }
   </style>
 </head>
@@ -41,7 +48,7 @@
   <div id="items">Loading items...</div>
 
   <script>
-    const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ3_xmr4crLXme_B8sNsI0M_qik51-FJ0_7QeJELPtxTJlHYhM5eWmIPgNsUrHNBuDHDdTJ0QMoTEwi/pub?output=csv';
+    const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT3I6R7hd1P5ffbYcvh4sClxxe-wjh5yaF8eB_a4Iu0RmWmYwrZlEKz6puTxXz7-f5ymqP70Q9TPg7Y/pub?output=csv';
     const FORM_URL_BASE = 'https://docs.google.com/forms/d/e/1FAIpQLSdsUDAkjKd5uhkhOtpjT5oeYLDW41Vw_Qjb0bcJjTQyTT9rAg/viewform?usp=pp_url&entry.149196318=';
 
     function parseCSV(data) {
@@ -69,23 +76,44 @@
       container.innerHTML = "";
 
       data.forEach(row => {
+        const itemName = row["Item Name"] || "Unnamed";
+        const imageUrl = row["Image URL"];
+        const description = row["Description"] || "";
+        const isClaimed = row["Claimed"]?.toLowerCase() === "yes";
+        const claimedBy = row["Claimed By"] || "—";
+        const claimedWhen = row["To be Claimed When"] || "—";
+
         const div = document.createElement("div");
         div.className = "item";
 
-        const itemName = document.createElement("h3");
-        itemName.textContent = row.Item;
+        const nameEl = document.createElement("h2");
+        nameEl.textContent = itemName;
+        div.appendChild(nameEl);
 
-        const claimStatus = document.createElement("p");
-
-        if (row.Claimed.toLowerCase() === "yes") {
-          claimStatus.innerHTML = `<span class="claimed">Claimed</span><br>By: ${row.Name || '-'} on ${row.Date || '-'}`;
-        } else {
-          const claimLink = FORM_URL_BASE + encodeURIComponent(row.Item);
-          claimStatus.innerHTML = `<a class="claim-button" href="${claimLink}" target="_blank">Claim this</a>`;
+        if (imageUrl) {
+          const img = document.createElement("img");
+          img.src = imageUrl;
+          div.appendChild(img);
         }
 
-        div.appendChild(itemName);
-        div.appendChild(claimStatus);
+        const descEl = document.createElement("p");
+        descEl.textContent = description;
+        div.appendChild(descEl);
+
+        if (isClaimed) {
+          const status = document.createElement("p");
+          status.innerHTML = `<span class="claimed">Claimed</span><br>By: ${claimedBy}<br>Date: ${claimedWhen}`;
+          div.appendChild(status);
+        } else {
+          const claimLink = FORM_URL_BASE + encodeURIComponent(itemName);
+          const claimButton = document.createElement("a");
+          claimButton.href = claimLink;
+          claimButton.target = "_blank";
+          claimButton.className = "claim-button";
+          claimButton.textContent = "Claim this item";
+          div.appendChild(claimButton);
+        }
+
         container.appendChild(div);
       });
     }
