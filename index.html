@@ -112,6 +112,7 @@
         img.src = row['Image URL'];  // Column name from your sheet
         img.alt = row['Item Name'];
         img.className = 'item-image';
+        div.appendChild(img);
 
         const descEl = document.createElement("p");
         descEl.textContent = description;
