@@ -41,6 +41,24 @@
       margin-top: 1rem;
     }
   </style>
+
+  <script>
+    const correctPassword = "freebies123"; // 🔐 CHANGE ME
+
+    let entered = false;
+    while (!entered) {
+      const input = prompt("Enter password to access the giveaway:");
+      if (input === null) {
+        document.body.innerHTML = "<h2>Access denied. Reload to try again.</h2>";
+        throw new Error("Access denied.");
+      }
+      if (input === correctPassword) {
+        entered = true;
+      } else {
+        alert("Incorrect password. Please try again.");
+      }
+    }
+  </script>
 </head>
 <body>
 
