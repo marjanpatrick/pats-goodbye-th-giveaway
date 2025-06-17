@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <title>Free Stuff Giveaway</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/tabletop.js/1.5.1/tabletop.min.js"></script>
   <style>
     body {
       font-family: sans-serif;
@@ -39,10 +38,33 @@
 <body>
 
   <h1>🎁 Free Stuff Giveaway</h1>
-  <div id="items"></div>
+  <div id="items">Loading items...</div>
 
   <script>
-    function showItems(data) {
+    const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ3_xmr4crLXme_B8sNsI0M_qik51-FJ0_7QeJELPtxTJlHYhM5eWmIPgNsUrHNBuDHDdTJ0QMoTEwi/pub?output=csv';
+    const FORM_URL_BASE = 'https://docs.google.com/forms/d/e/1FAIpQLSdsUDAkjKd5uhkhOtpjT5oeYLDW41Vw_Qjb0bcJjTQyTT9rAg/viewform?usp=pp_url&entry.149196318=';
+
+    function parseCSV(data) {
+      const [headerLine, ...rows] = data.trim().split('\n');
+      const headers = headerLine.split(',');
+
+      return rows.map(row => {
+        const values = row.split(',');
+        return headers.reduce((obj, key, i) => {
+          obj[key.trim()] = values[i]?.trim() || '';
+          return obj;
+        }, {});
+      });
+    }
+
+    async function loadItems() {
+      const response = await fetch(SHEET_CSV_URL);
+      const text = await response.text();
+      const data = parseCSV(text);
+      renderItems(data);
+    }
+
+    function renderItems(data) {
       const container = document.getElementById("items");
       container.innerHTML = "";
 
@@ -54,11 +76,12 @@
         itemName.textContent = row.Item;
 
         const claimStatus = document.createElement("p");
+
         if (row.Claimed.toLowerCase() === "yes") {
           claimStatus.innerHTML = `<span class="claimed">Claimed</span><br>By: ${row.Name || '-'} on ${row.Date || '-'}`;
         } else {
-          const formLink = `https://docs.google.com/forms/d/e/1FAIpQLSdsUDAkjKd5uhkhOtpjT5oeYLDW41Vw_Qjb0bcJjTQyTT9rAg/viewform?usp=pp_url&entry.149196318=${encodeURIComponent(row.Item)}`;
-          claimStatus.innerHTML = `<a class="claim-button" href="${formLink}" target="_blank">Claim this</a>`;
+          const claimLink = FORM_URL_BASE + encodeURIComponent(row.Item);
+          claimStatus.innerHTML = `<a class="claim-button" href="${claimLink}" target="_blank">Claim this</a>`;
         }
 
         div.appendChild(itemName);
@@ -67,13 +90,7 @@
       });
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
-      Tabletop.init({
-        key: '2PACX-1vQ3_xmr4crLXme_B8sNsI0M_qik51-FJ0_7QeJELPtxTJlHYhM5eWmIPgNsUrHNBuDHDdTJ0QMoTEwi',
-        simpleSheet: true,
-        callback: showItems
-      });
-    });
+    loadItems();
   </script>
 </body>
 </html>
