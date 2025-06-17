@@ -1,83 +1,79 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Free Items Giveaway</title>
+  <meta charset="UTF-8">
+  <title>Free Stuff Giveaway</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tabletop.js/1.5.1/tabletop.min.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; max-width: 700px; margin: auto; }
-    h1 { text-align: center; }
-    .item { border: 1px solid #ccc; padding: 15px; margin-bottom: 15px; border-radius: 6px; }
-    .item img { max-width: 100%; height: auto; display: block; margin-bottom: 10px; }
-    .item-title { font-weight: bold; font-size: 1.2em; margin-bottom: 6px; }
-    .item-desc { margin-bottom: 10px; }
-    .claim-btn {
-      background-color: #007bff; color: white; border: none;
-      padding: 8px 12px; border-radius: 4px; cursor: pointer;
-      text-decoration: none;
-      font-size: 1em;
+    body {
+      font-family: sans-serif;
+      padding: 2rem;
+      max-width: 600px;
+      margin: auto;
     }
-    .claim-btn:hover { background-color: #0056b3; }
+    .item {
+      border: 1px solid #ccc;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-radius: 6px;
+    }
+    .claimed {
+      color: red;
+      font-weight: bold;
+    }
+    .claim-button {
+      padding: 0.5rem 1rem;
+      background: green;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .claim-button.disabled {
+      background: gray;
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>
-  <h1>Free Items Giveaway</h1>
-  <div id="items-container">Loading items...</div>
 
-  <!-- Tabletop.js to load Google Sheet data -->
-  <script src="https://cdn.jsdelivr.net/npm/tabletop@1.6.0/tabletop.min.js"></script>
+  <h1>🎁 Free Stuff Giveaway</h1>
+  <div id="items"></div>
+
   <script>
-    // Google Sheet key (from your sheet URL)
-    const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ3_xmr4crLXme_B8sNsI0M_qik51-FJ0_7QeJELPtxTJlHYhM5eWmIPgNsUrHNBuDHDdTJ0QMoTEwi/pubhtml';
+    function showItems(data) {
+      const container = document.getElementById("items");
+      container.innerHTML = "";
 
-    // Google Form pre-filled URL template with the item placeholder
-    // Replace entry.149196318 with your field key
-    const FORM_BASE_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSdsUDAkjKd5uhkhOtpjT5oeYLDW41Vw_Qjb0bcJjTQyTT9rAg/viewform?usp=pp_url&entry.149196318=';
+      data.forEach(row => {
+        const div = document.createElement("div");
+        div.className = "item";
 
-    function escapeHtml(text) {
-      var map = {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#039;'
-      };
-      return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        const itemName = document.createElement("h3");
+        itemName.textContent = row.Item;
+
+        const claimStatus = document.createElement("p");
+        if (row.Claimed.toLowerCase() === "yes") {
+          claimStatus.innerHTML = `<span class="claimed">Claimed</span><br>By: ${row.Name || '-'} on ${row.Date || '-'}`;
+        } else {
+          const formLink = `https://docs.google.com/forms/d/e/1FAIpQLSdsUDAkjKd5uhkhOtpjT5oeYLDW41Vw_Qjb0bcJjTQyTT9rAg/viewform?usp=pp_url&entry.149196318=${encodeURIComponent(row.Item)}`;
+          claimStatus.innerHTML = `<a class="claim-button" href="${formLink}" target="_blank">Claim this</a>`;
+        }
+
+        div.appendChild(itemName);
+        div.appendChild(claimStatus);
+        container.appendChild(div);
+      });
     }
 
-    function loadItems() {
+    window.addEventListener('DOMContentLoaded', () => {
       Tabletop.init({
-        key: SHEET_URL,
+        key: '1UDuVaOmDT1ZitAdk_t5AUjvodvqzrNSKF-b4OP0XTA4',
         simpleSheet: true,
-        callback: function(data, tabletop) {
-          const container = document.getElementById('items-container');
-          container.innerHTML = '';
-
-          // Filter only unclaimed items
-          const unclaimedItems = data.filter(item => {
-            // If Claimed is missing or not "Yes" (case-insensitive)
-            return !(item.Claimed && item.Claimed.toLowerCase() === 'yes');
-          });
-
-          if (unclaimedItems.length === 0) {
-            container.innerHTML = '<p>All items have been claimed. Thank you!</p>';
-            return;
-          }
-
-          unclaimedItems.forEach(item => {
-            const itemName = item['Item Name'] || 'Unnamed Item';
-            const imageUrl = item['Image URL'] || '';
-            const desc = item['Description'] || '';
-
-            // Build claim URL by URL-encoding item name
-            const claimUrl = FORM_BASE_URL + encodeURIComponent(itemName);
-
-            const itemDiv = document.createElement('div');
-            itemDiv.className = 'item';
-
-            let imgHtml = '';
-            if (imageUrl) {
-              imgHtml = `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(itemName)}" />`;
-            }
-
-            itemDiv.innerHTML = `
+        callback: showItems
+      });
+    });
+  </script>
+</body>
+</html>
