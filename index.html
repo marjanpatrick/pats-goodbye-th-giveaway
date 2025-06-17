@@ -109,8 +109,8 @@
         div.appendChild(nameEl);
 
         const img = document.createElement('img');
-        img.src = item['Image URL'];  // Column name from your sheet
-        img.alt = item['Item Name'];
+        img.src = row['Image URL'];  // Column name from your sheet
+        img.alt = row['Item Name'];
         img.className = 'item-image';
 
         const descEl = document.createElement("p");
